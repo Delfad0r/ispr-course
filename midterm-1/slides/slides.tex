@@ -1,0 +1,68 @@
+\documentclass[10pt]{beamer}
+\usepackage{mystyle}
+
+\midterm{1}
+\assignment{3}
+\date{March 30, 2021}
+
+\title{Pitch Detector}
+
+\DeclareMathOperator{\Auto}{Auto}
+\DeclareMathOperator{\reverse}{reverse}
+
+
+\begin{document}
+
+\def\yy{\mathbf{y}}
+
+\frame{\titlepage}
+\begin{frame}[fragile]{Autocorrelogram}
+\begin{itemize}
+\item The autocorrelogram $\Auto_{\yy}$ measures the correlation of a signal $\yy$ with itself at different time lags:
+\[
+\Auto_{\yy}[\tau]=\frac{1}{\norm{\yy}^2}\sum_{t=0}^{N-\tau-1}\yy[t]\cdot\yy[t+\tau].
+\]
+\item It can be computed by convolution, but for a small set of time lags (\pyth{window}), the naive implementation is more efficient.
+\end{itemize}
+\begin{python}
+def autocorrelogram(y, window):
+    b, e = window
+    a = np.array([np.dot(y[0 : y.size - tau],y[tau :])
+        for tau in range(b, e)])
+    return a / a[0]
+\end{python}
+\end{frame}
+\begin{frame}[fragile]{Finding the Pitch}
+\begin{itemize}
+\item Peaks in the autocorrelogram correspond to periods of the signal $\yy$.
+\item The minimal period $\tau_0$ of $\yy$ is the smallest maximum point of the autocorrelogram \textbf{after 0}.
+\end{itemize}
+\begin{python}
+def find_pitch(y, sr, lowest_freq = 80.):
+    cor = autocorrelogram(y, [0, int(sr / lowest_freq)])
+    peaks = []
+    for a in np.split(np.arange(cor.size),
+		np.nonzero(cor < 0)[0].tolist())[1 :]:
+	        u = [i for i in a if cor[i] > .01]
+	        if u:
+	            peaks.append(max(u, key = lambda i: cor[i]))
+    highest_peak = max(cor[p] for p in peaks)
+    f = np.array([p for p in peaks
+			if cor[p] > .95 * highest_peak])
+    d = np.average(f / np.arange(1, f.size + 1), 0, cor[f])
+    return sr / d
+\end{python}
+\end{frame}
+\begin{frame}[fragile]{Results}
+\def\importautocorrelogram#1{\raisebox{-.4\height}{\resizebox{!}{1.3cm}{\input{pictures/#1.pgf}}}}
+\begin{tabularx}{\textwidth}{@{}ll>{\centering\arraybackslash}Xrr@{}}\toprule
+Instrument &  Note & Autocorrelogram & Pitch & Error \\\midrule\addlinespace
+Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.2}{\percent}\\\addlinespace
+Oboe & C6 & \importautocorrelogram{oboe_c6}& \SI{1046}{Hz} & \SI{.01}{\percent}\\\addlinespace
+\makecell[lt]{Keyboard\\\scriptsize(homemade)} & G3 & \importautocorrelogram{keyboard_g3} & \SI{196.7}{\hertz} & \SI{.3}{\percent}\\\addlinespace\bottomrule
+\end{tabularx}
+\end{frame}
+\begin{frame}{Real-time Pitch Detection}
+content...
+\end{frame}
+\end{document}

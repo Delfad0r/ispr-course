@@ -7,9 +7,10 @@ import numpy as np
 
 def autocorrelogram(y, window):
     b, e = window
-    normdot = lambda u, v: np.dot(u / np.linalg.norm(u), v / np.linalg.norm(v))
-    a = np.array([normdot(y[0 : y.size - tau], y[tau :]) for tau in range(b, e)])
-    return a
+    #normdot = lambda u, v: np.dot(u / np.linalg.norm(u), v / np.linalg.norm(v))
+    #a = np.array([normdot(y[0 : y.size - tau], y[tau :]) for tau in range(b, e)])
+    a = np.array([np.dot(y[0 : y.size - tau], y[tau :]) for tau in range(b, e)])
+    return a / a[0]
 
 def find_pitch(y, sr, lowest_freq = 80.):
     if np.linalg.norm(y, 1) / y.size < 5e-3:
