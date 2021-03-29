@@ -22,15 +22,14 @@
 \[
 \Auto_{\yy}[\tau]=\frac{1}{\norm{\yy}^2}\sum_{t=0}^{N-\tau-1}\yy[t]\cdot\yy[t+\tau].
 \]
-\item It can be computed by convolution, but for a small set of time lags (\pyth{window}) the naive implementation is more efficient.
+\item It can be computed as the convolution between $\yy$ and $\reverse(\yy)$.
 \end{itemize}
 \vspace{.2cm}
 \begin{python}
-def autocorrelogram(y, window):
-    b, e = window
-    a = np.array([np.dot(y[0 : y.size - tau],y[tau :])
-        for tau in range(b, e)])
-    return a / a[0]
+def autocorrelogram(y):
+    a = np.convolve(y, y[: : -1], 'same')
+    a = a[a.size // 2 :]
+    return a / np.dot(y, y)
 \end{python}
 \end{frame}
 \begin{frame}[fragile]{Finding the Pitch}
@@ -49,27 +48,26 @@ def autocorrelogram(y, window):
 \end{columns}
 \vspace{.2cm}
 \begin{python}
-def find_pitch(y, sr, lowest_freq = 80.):
-    cor = autocorrelogram(y, [0, int(sr / lowest_freq)])
+def find_pitch(y, sr):
+    a = autocorrelogram(y)
     peaks = []
-    for a in np.split(np.arange(cor.size),
-		np.nonzero(cor < 0)[0].tolist())[1 :]:
-	        u = [i for i in a if cor[i] > .01]
-	        if u:
-	            peaks.append(max(u, key = lambda i: cor[i]))
-    highest_peak = max(cor[p] for p in peaks)
+    for b in np.split(np.arange(a.size),
+		np.nonzero(a < 0)[0].tolist())[1 :]:
+	        if b:= [i for i in b if a[i] > .01]:
+	            peaks.append(max(b, key = lambda i: a[i]))
+    highest_peak = max(a[p] for p in peaks)
     f = np.array([p for p in peaks
-			if cor[p] > .95 * highest_peak])
-    d = np.average(f / np.arange(1, f.size + 1), 0, cor[f])
-    return sr / d
+			if a[p] >= .95 * highest_peak][: 10])
+    tau = np.average(f / np.arange(1, f.size + 1), 0, a[f])
+    return sr / tau
 \end{python}
 \end{frame}
 \begin{frame}[fragile]{Results}
 \def\importautocorrelogram#1{\raisebox{-.4\height}{\resizebox{!}{1.3cm}{\input{pictures/#1.pgf}}}}
 \begin{tabularx}{\textwidth}{@{}ll>{\centering\arraybackslash}Xrr@{}}\toprule
 Instrument &  Note & Autocorrelogram & Pitch & Error \\\midrule\addlinespace
-Oboe & C6 & \importautocorrelogram{oboe_c6}& \SI{1046}{Hz} & \SI{.01}{\percent}\\\addlinespace
-Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.2}{\percent}\\\addlinespace
+Oboe & C6 & \importautocorrelogram{oboe_c6}& \SI{1046}{Hz} & \SI{.03}{\percent}\\\addlinespace
+Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.3}{\percent}\\\addlinespace
 \makecell[lt]{Keyboard\\\scriptsize\color{black!70}(homemade)} & G3 & \importautocorrelogram{keyboard_g3} &
  \SI{196.7}{\hertz} & \SI{.3}{\percent}\\\addlinespace
 \makecell[lt]{Voice\\\scriptsize\color{black!70}(homemade)} & D3 & \importautocorrelogram{voice_d3} & \SI{145.1}{\hertz} & \SI{1}{\percent}\\\addlinespace\bottomrule

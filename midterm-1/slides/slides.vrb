@@ -2,8 +2,8 @@
 \def\importautocorrelogram#1{\raisebox{-.4\height}{\resizebox{!}{1.3cm}{\input{pictures/#1.pgf}}}}
 \begin{tabularx}{\textwidth}{@{}ll>{\centering\arraybackslash}Xrr@{}}\toprule
 Instrument &  Note & Autocorrelogram & Pitch & Error \\\midrule\addlinespace
-Oboe & C6 & \importautocorrelogram{oboe_c6}& \SI{1046}{Hz} & \SI{.01}{\percent}\\\addlinespace
-Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.2}{\percent}\\\addlinespace
+Oboe & C6 & \importautocorrelogram{oboe_c6}& \SI{1046}{Hz} & \SI{.03}{\percent}\\\addlinespace
+Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.3}{\percent}\\\addlinespace
 \makecell[lt]{Keyboard\\\scriptsize\color{black!70}(homemade)} & G3 & \importautocorrelogram{keyboard_g3} &
  \SI{196.7}{\hertz} & \SI{.3}{\percent}\\\addlinespace
 \makecell[lt]{Voice\\\scriptsize\color{black!70}(homemade)} & D3 & \importautocorrelogram{voice_d3} & \SI{145.1}{\hertz} & \SI{1}{\percent}\\\addlinespace\bottomrule

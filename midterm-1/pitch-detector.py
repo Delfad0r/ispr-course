@@ -5,27 +5,25 @@ import math
 import numpy as np
 
 
-def autocorrelogram(y, window):
-    b, e = window
-    a = np.array([np.dot(y[0 : y.size - tau], y[tau :]) for tau in range(b, e)])
-    return a / a[0]
+def autocorrelogram(y):
+    a = np.convolve(y, y[: : -1], 'same')
+    a = a[a.size // 2 :]
+    return a / np.dot(y, y)
 
-def find_pitch(y, sr, lowest_freq = 80.):
-    print(np.linalg.norm(y, 1) / y.size)
+def find_pitch(y, sr):
     if np.linalg.norm(y, 1) / y.size < 2e-2:
         return None
-    cor = autocorrelogram(y, [0, int(sr / lowest_freq)])
+    a = autocorrelogram(y)
     peaks = []
-    for a in np.split(np.arange(cor.size), np.nonzero(cor < 0)[0].tolist())[1 :]:
-        u = [i for i in a if cor[i] > .01]
-        if u:
-            peaks.append(max(u, key = lambda i: cor[i]))
+    for b in np.split(np.arange(a.size), np.nonzero(a < 0)[0].tolist())[1 :]:
+        if b:= [i for i in b if a[i] > .01]:
+            peaks.append(max(b, key = lambda i: a[i]))
     if not peaks:
         return None
-    highest_peak = max(cor[p] for p in peaks)
-    f = np.array([p for p in peaks if cor[p] > .95 * highest_peak])
-    d = np.average(f / np.arange(1, f.size + 1), 0, cor[f])
-    return sr / d
+    highest_peak = max(a[p] for p in peaks)
+    f = np.array([p for p in peaks if a[p] >= .95 * highest_peak][: 10])
+    tau = np.average(f / np.arange(1, f.size + 1), 0, a[f])
+    return sr / tau
 
 def bytes_to_wav(b):
     return np.frombuffer(b, dtype = np.int16).astype(float) / (2 ** 15)
@@ -89,12 +87,15 @@ class MusicalStaff:
         pyglet.shapes.Rectangle(x = x1, y = y1, width = x2 - x1, height = y2 - y1, color = (255, 255, 255)).draw()
         ymap = lambda y: y1 + (y2 - y1) / 27 * (y + 4)
         ynotes = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21]
+        j = self.yshift + 5
         for i, y in enumerate(ynotes):
             pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2f', [x1 + 5, int(ymap(y)), x3 + 3, int(ymap(y))]), ('c3B', [0, 0, 0] * 2))
             n = 'CDEFGAB'[i % 7]
-            l = self.labels[f'{n}{self.yshift + 5}']
+            l = self.labels[f'{n}{j}']
             l.x, l.y = x3 + 5, ymap(y)
             l.draw()
+            if n == 'B':
+                j += 1
         for y in range(22):
             if y not in ynotes:
                 pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v2f', [x1 + 5, int(ymap(y)), x3, int(ymap(y))]), ('c3B', [160, 160, 160] * 2))
@@ -133,7 +134,7 @@ class MusicalStaff:
 window_config = pyglet.gl.Config(sample_buffers = 1, samples = 4)
 window = pyglet.window.Window(width = 800, height = 600, config = window_config)
 
-mic = MicStream(fps = 25)
+mic = MicStream(fps = 60)
 audio = AudioManager(stream = mic, time_window = .04)
 audio_track = np.array([], dtype = float)
 staff = MusicalStaff(max_samples = 1000)
