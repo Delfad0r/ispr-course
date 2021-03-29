@@ -1,0 +1,37 @@
+\ProvidesPackage{mystyle}
+
+% Beamer
+%\usetheme{Warsaw}
+%\usecolortheme{seahorse}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}[triangle]
+\definecolor{mythemecolor}{HTML}{1F77B4}
+\setbeamercolor{titlelike}{fg=mythemecolor}
+\setbeamercolor{itemize item}{fg=mythemecolor}
+\setbeamercolor{enumerate item}{fg=mythemecolor}
+
+% Title page
+\NewDocumentCommand{\midterm}{m}{\def\ispr@midterm{#1}}
+\NewDocumentCommand{\assignment}{m}{\def\ispr@assignment{#1}}
+\AtBeginDocument{%
+\author{Filippo Baroni}
+\subtitle{ISPR - Midterm \ispr@midterm\\Assignment \ispr@assignment}%
+}
+
+% Pictures
+\usepackage{graphicx}
+
+% Math
+\DeclareFontShape{OT1}{cmss}{b}{n}{<->ssub * cmss/bx/n}{}
+\NewDocumentCommand{\norm}{m}{\lVert #1 \rVert}
+
+% SI Units
+\usepackage{siunitx}
+
+% Listings
+\usepackage{pythonhighlight}
+
+% Tables
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{makecell}

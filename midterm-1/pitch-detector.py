@@ -7,13 +7,12 @@ import numpy as np
 
 def autocorrelogram(y, window):
     b, e = window
-    #normdot = lambda u, v: np.dot(u / np.linalg.norm(u), v / np.linalg.norm(v))
-    #a = np.array([normdot(y[0 : y.size - tau], y[tau :]) for tau in range(b, e)])
     a = np.array([np.dot(y[0 : y.size - tau], y[tau :]) for tau in range(b, e)])
     return a / a[0]
 
 def find_pitch(y, sr, lowest_freq = 80.):
-    if np.linalg.norm(y, 1) / y.size < 5e-3:
+    print(np.linalg.norm(y, 1) / y.size)
+    if np.linalg.norm(y, 1) / y.size < 2e-2:
         return None
     cor = autocorrelogram(y, [0, int(sr / lowest_freq)])
     peaks = []
@@ -103,6 +102,10 @@ class MusicalStaff:
         x = np.array([i for i, v in enumerate(self.queue) if v is not None], dtype = int)
         y = np.array([v for v in self.queue if v is not None], dtype = float)
         y = np.round(np.log2(y / 440) * 12) - 3
+        take = np.zeros(x.size, dtype = bool)
+        take[1 : -1] = (y[: -2] == y[1 : -1]) & (y[1 : -1] == y[2 :])
+        x = x[take]
+        y = y[take]
         if y.size < 2:
             return
         ylast = y[len(self.queue) - x <= self.max_samples * .06]
@@ -110,11 +113,8 @@ class MusicalStaff:
             self.yshift = min(range(-3, 4), key = lambda i: sum(np.maximum(0, abs(ylast - 11 - 12 * i) - 11)) + abs(i - self.yshift))
         y = y - 12 * self.yshift
         take = (-2 <= y) & (y <= 21)
-        take[0] = take[-1] = 0
-        take[1 : -1] = take[1 : -1] & (y[: -2] == y[1 : -1]) & (y[1 : -1] == y[2 :])
         x = x[take]
         y = y[take]
-        
         x = x1 + 5 + (x + self.max_samples - len(self.queue)) / self.max_samples * (x3 - x1 - 5)
         y = ymap(y)
         coords = np.empty(8 * x.size, dtype = float)
@@ -126,7 +126,7 @@ class MusicalStaff:
         coords[5 : : 8] = y + 3
         coords[6: : 8] = x + 2
         coords[7 : : 8] = y - 3
-        cols = np.tile(np.array([0, 0, 255], dtype = np.uint8), coords.size // 2)
+        cols = np.tile(np.array([31, 119, 180], dtype = np.uint8), coords.size // 2)
         pyglet.graphics.draw(coords.size // 2, pyglet.gl.GL_QUADS, ('v2f', coords), ('c3B', cols))
 
 
@@ -144,7 +144,6 @@ def update_func(dt):
     audio_track = audio.get_audio()
     pitch = find_pitch(audio_track, audio.rate)
     staff.add_sample(pitch)
-    print(pitch)
 
 pyglet.font.add_file('font.ttf')
 
@@ -160,11 +159,21 @@ def draw_audio_track(track, x1, y1, x2, y2, l):
     coords[1 : : 2] = y
     pyglet.graphics.draw(l, pyglet.gl.GL_LINE_STRIP, ('v2f', coords))
 
+pitch_label = pyglet.text.Label('',
+    font_name = 'Coolvetica',
+    font_size = 16,
+    color = (255, 255, 255, 255),
+    anchor_x = 'right', anchor_y = 'baseline')
 @window.event
 def on_draw():
     window.clear()
-    draw_audio_track(audio_track, 0, 0, window.width, window.height / 2, int(audio.time_window * audio.rate))
+    draw_audio_track(audio_track, 0, 20, window.width, window.height / 2 - 20, int(audio.time_window * audio.rate))
     staff.draw(0, window.height / 2, window.width, window.height)
+    if staff.queue and staff.queue[-1] is not None:
+        pitch_label.text = f'{ staff.queue[-1]:.0f} Hz'
+        pitch_label.x = window.width - 5
+        pitch_label.y = 5
+        pitch_label.draw()
 
 pyglet.clock.schedule(update_func)
 

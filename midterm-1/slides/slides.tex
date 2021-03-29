@@ -22,8 +22,9 @@
 \[
 \Auto_{\yy}[\tau]=\frac{1}{\norm{\yy}^2}\sum_{t=0}^{N-\tau-1}\yy[t]\cdot\yy[t+\tau].
 \]
-\item It can be computed by convolution, but for a small set of time lags (\pyth{window}), the naive implementation is more efficient.
+\item It can be computed by convolution, but for a small set of time lags (\pyth{window}) the naive implementation is more efficient.
 \end{itemize}
+\vspace{.2cm}
 \begin{python}
 def autocorrelogram(y, window):
     b, e = window
@@ -33,10 +34,20 @@ def autocorrelogram(y, window):
 \end{python}
 \end{frame}
 \begin{frame}[fragile]{Finding the Pitch}
+\begin{columns}
+\begin{column}{.5\textwidth}
 \begin{itemize}
 \item Peaks in the autocorrelogram correspond to periods of the signal $\yy$.
 \item The minimal period $\tau_0$ of $\yy$ is the smallest maximum point of the autocorrelogram \textbf{after 0}.
 \end{itemize}
+\end{column}
+\begin{column}{.5\textwidth}
+\begin{center}
+\resizebox{\textwidth}{!}{\input{pictures/keyboard_g3.pgf}}
+\end{center}
+\end{column}
+\end{columns}
+\vspace{.2cm}
 \begin{python}
 def find_pitch(y, sr, lowest_freq = 80.):
     cor = autocorrelogram(y, [0, int(sr / lowest_freq)])
@@ -57,12 +68,21 @@ def find_pitch(y, sr, lowest_freq = 80.):
 \def\importautocorrelogram#1{\raisebox{-.4\height}{\resizebox{!}{1.3cm}{\input{pictures/#1.pgf}}}}
 \begin{tabularx}{\textwidth}{@{}ll>{\centering\arraybackslash}Xrr@{}}\toprule
 Instrument &  Note & Autocorrelogram & Pitch & Error \\\midrule\addlinespace
-Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.2}{\percent}\\\addlinespace
 Oboe & C6 & \importautocorrelogram{oboe_c6}& \SI{1046}{Hz} & \SI{.01}{\percent}\\\addlinespace
-\makecell[lt]{Keyboard\\\scriptsize(homemade)} & G3 & \importautocorrelogram{keyboard_g3} & \SI{196.7}{\hertz} & \SI{.3}{\percent}\\\addlinespace\bottomrule
+Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.2}{\percent}\\\addlinespace
+\makecell[lt]{Keyboard\\\scriptsize\color{black!70}(homemade)} & G3 & \importautocorrelogram{keyboard_g3} &
+ \SI{196.7}{\hertz} & \SI{.3}{\percent}\\\addlinespace
+\makecell[lt]{Voice\\\scriptsize\color{black!70}(homemade)} & D3 & \importautocorrelogram{voice_d3} & \SI{145.1}{\hertz} & \SI{1}{\percent}\\\addlinespace\bottomrule
 \end{tabularx}
 \end{frame}
 \begin{frame}{Real-time Pitch Detection}
-content...
+\begin{itemize}
+\item This algorithm is fast enough to run in real-time.
+\item \pyth{pyaudio} for microphone input, \pyth{pyglet} for graphics.
+\item And now, a live demonstration!
+\end{itemize}
+\begin{center}
+\fcolorbox{gray}{white}{\includegraphics[width=.66\textwidth]{pictures/real-time.png}}
+\end{center}
 \end{frame}
 \end{document}
