@@ -43,7 +43,8 @@ class MicStream:
             input = True,
             frames_per_buffer = self.chunk)
     def read(self):
-        return bytes_to_wav(self.stream.read(self.chunk))
+        cnt = max(self.stream.get_read_available(), self.chunk)
+        return bytes_to_wav(self.stream.read(cnt))
     def stop(self):
         self.stream.stop_stream()
         self.stream.close()
@@ -85,7 +86,7 @@ class MusicalStaff:
     def draw(self, x1, y1, x2, y2):
         x3 = x2 - 25
         pyglet.shapes.Rectangle(x = x1, y = y1, width = x2 - x1, height = y2 - y1, color = (255, 255, 255)).draw()
-        ymap = lambda y: y1 + (y2 - y1) / 27 * (y + 4)
+        ymap = lambda y: y1 + (y2 - y1) / 29 * (y + 4)
         ynotes = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21]
         j = self.yshift + 5
         for i, y in enumerate(ynotes):
@@ -102,33 +103,39 @@ class MusicalStaff:
         
         x = np.array([i for i, v in enumerate(self.queue) if v is not None], dtype = int)
         y = np.array([v for v in self.queue if v is not None], dtype = float)
+        if y.size < 6:
+            return
+        
         y = np.round(np.log2(y / 440) * 12) - 3
         take = np.zeros(x.size, dtype = bool)
-        take[1 : -1] = (y[: -2] == y[1 : -1]) & (y[1 : -1] == y[2 :])
+        take[2 : -2] = (y[3 : -1] == y[4 :])
+        for i in range(3):
+            take[2 : -2] &= (y[i : -4 + i] == y[i + 1 : -3 + i])
+        take = np.convolve(take, np.ones((5, ), dtype = bool), 'same')
         x = x[take]
         y = y[take]
         if y.size < 2:
             return
         ylast = y[len(self.queue) - x <= self.max_samples * .06]
-        if ylast.size >= .03 * self.max_samples:
-            self.yshift = min(range(-3, 4), key = lambda i: sum(np.maximum(0, abs(ylast - 11 - 12 * i) - 11)) + abs(i - self.yshift))
+        if ylast.size >= .02 * self.max_samples:
+            self.yshift = min(range(-3, 4), key = lambda i: sum(np.maximum(0, abs(ylast - 10.5 - 12 * i) - 10.5)) + abs(i - self.yshift))
         y = y - 12 * self.yshift
-        take = (-2 <= y) & (y <= 21)
+        take = (-2 <= y) & (y <= 23)
         x = x[take]
         y = y[take]
         x = x1 + 5 + (x + self.max_samples - len(self.queue)) / self.max_samples * (x3 - x1 - 5)
         y = ymap(y)
         coords = np.empty(8 * x.size, dtype = float)
-        coords[: : 8] = x - 2
+        coords[: : 8] = x - 3
         coords[1 : : 8] = y - 3
-        coords[2: : 8] = x - 2
+        coords[2: : 8] = x - 3
         coords[3 : : 8] = y + 3
-        coords[4: : 8] = x + 2
+        coords[4: : 8] = x + 3
         coords[5 : : 8] = y + 3
-        coords[6: : 8] = x + 2
+        coords[6: : 8] = x + 3
         coords[7 : : 8] = y - 3
-        cols = np.tile(np.array([31, 119, 180], dtype = np.uint8), coords.size // 2)
-        pyglet.graphics.draw(coords.size // 2, pyglet.gl.GL_QUADS, ('v2f', coords), ('c3B', cols))
+        cols = np.tile(np.array([31, 119, 180, 64], dtype = np.uint8), coords.size // 2)
+        pyglet.graphics.draw(coords.size // 2, pyglet.gl.GL_QUADS, ('v2f', coords), ('c4B', cols))
 
 
 window_config = pyglet.gl.Config(sample_buffers = 1, samples = 4)
@@ -137,7 +144,7 @@ window = pyglet.window.Window(width = 800, height = 600, config = window_config)
 mic = MicStream(fps = 60)
 audio = AudioManager(stream = mic, time_window = .04)
 audio_track = np.array([], dtype = float)
-staff = MusicalStaff(max_samples = 1000)
+staff = MusicalStaff(max_samples = 1500)
 
 def update_func(dt):
     global audio_track
@@ -147,6 +154,8 @@ def update_func(dt):
     staff.add_sample(pitch)
 
 pyglet.font.add_file('font.ttf')
+pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
+pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
 
 def draw_audio_track(track, x1, y1, x2, y2, l):
     x = np.linspace(x1, x2, l)
