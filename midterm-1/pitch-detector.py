@@ -14,14 +14,15 @@ def find_pitch(y, sr):
     if np.linalg.norm(y, 1) / y.size < 2e-2:
         return None
     a = autocorrelogram(y)
-    peaks = []
-    for b in np.split(np.arange(a.size), np.nonzero(a < 0)[0].tolist())[1 :]:
-        if b:= [i for i in b if a[i] > .01]:
-            peaks.append(max(b, key = lambda i: a[i]))
-    if not peaks:
+    peaks = np.array([], dtype = int)
+    for b in np.split(np.arange(a.size), np.nonzero(a < 0)[0])[1 :]:
+        if np.any(a[b] > .01):
+            peaks = np.append(peaks, b[np.argmax(a[b])])
+    if peaks.size == 0:
         return None
-    highest_peak = max(a[p] for p in peaks)
-    f = np.array([p for p in peaks if a[p] >= .95 * highest_peak][: 10])
+    highest_peak = max(a[peaks])
+    #f = np.array([p for p in peaks if a[p] >= .95 * highest_peak][: 10])
+    f = peaks[a[peaks] > .95 * highest_peak][: 10]
     tau = np.average(f / np.arange(1, f.size + 1), 0, a[f])
     return sr / tau
 

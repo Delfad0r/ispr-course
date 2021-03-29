@@ -24,7 +24,7 @@
 \]
 \item It can be computed as the convolution between $\yy$ and $\reverse(\yy)$.
 \end{itemize}
-\vspace{.2cm}
+\vspace{.4cm}
 \begin{python}
 def autocorrelogram(y):
     a = np.convolve(y, y[: : -1], 'same')
@@ -37,7 +37,7 @@ def autocorrelogram(y):
 \begin{column}{.5\textwidth}
 \begin{itemize}
 \item Peaks in the autocorrelogram correspond to periods of the signal $\yy$.
-\item The minimal period $\tau_0$ of $\yy$ is the smallest maximum point of the autocorrelogram \textbf{after 0}.
+\item The minimal period $\tau_0$ of $\yy$ is the leftmost maximum point of the autocorrelogram \textbf{after 0}.
 \end{itemize}
 \end{column}
 \begin{column}{.5\textwidth}
@@ -46,18 +46,17 @@ def autocorrelogram(y):
 \end{center}
 \end{column}
 \end{columns}
-\vspace{.2cm}
+\vspace{.4cm}
 \begin{python}
 def find_pitch(y, sr):
     a = autocorrelogram(y)
-    peaks = []
+    peaks = np.array([], dtype = int)
     for b in np.split(np.arange(a.size),
-		np.nonzero(a < 0)[0].tolist())[1 :]:
-	        if b:= [i for i in b if a[i] > .01]:
-	            peaks.append(max(b, key = lambda i: a[i]))
-    highest_peak = max(a[p] for p in peaks)
-    f = np.array([p for p in peaks
-			if a[p] >= .95 * highest_peak][: 10])
+		np.nonzero(a < 0)[0])[1 :]:
+	        if np.any(a[b] > .01):
+	            peaks.append(b[np.argmax(a[b])])
+    highest_peak = max(a[peaks])
+    f = peaks[a[peaks] > .95 * highest_peak][: 10]
     tau = np.average(f / np.arange(1, f.size + 1), 0, a[f])
     return sr / tau
 \end{python}
@@ -80,7 +79,7 @@ Clarinet & C6 & \importautocorrelogram{clarinet_c6} & \SI{1049}{\hertz} & \SI{.3
 \item And now, a live demonstration!
 \end{itemize}
 \begin{center}
-\fcolorbox{gray}{white}{\includegraphics[width=.66\textwidth]{pictures/real-time.png}}
+\includegraphics[width=.66\textwidth]{pictures/real-time.png}
 \end{center}
 \end{frame}
 \end{document}
