@@ -7,6 +7,11 @@
 \setbeamertemplate{itemize item}[triangle]
 \definecolor{mythemecolor}{HTML}{1F77B4}
 \setbeamercolor{titlelike}{fg=mythemecolor}
+%\setbeamertemplate{frametitle}{%
+%\usebeamerfont{frametitle}\insertframetitle\vphantom{g}%
+%\par%
+%\rule[.5\baselineskip]{\paperwidth}{.4pt}
+%}
 \setbeamercolor{itemize item}{fg=mythemecolor}
 \setbeamercolor{enumerate item}{fg=mythemecolor}
 
@@ -19,9 +24,21 @@
 }
 
 % Pictures
+\usepackage{import}
 \usepackage{graphicx}
+\usepackage{fontawesome5}
+
+% Graphics
+\usepackage{tikz}
+\usetikzlibrary{math,calc,backgrounds}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.16}
+
+% Logic
+\usepackage{xifthen}
 
 % Math
+\usepackage{amsmath}
 \DeclareFontShape{OT1}{cmss}{b}{n}{<->ssub * cmss/bx/n}{}
 \NewDocumentCommand{\norm}{m}{\lVert #1 \rVert}
 
