@@ -1,2 +1,23 @@
-\frametitle{Experiments}
-j
+\frametitle{Appendix - Code}
+\textbf{One epoch of training}
+\begin{python}
+# [...] initialize x0 and y0
+h0P = sigmoid(self.c + self.W @ x0 + self.U @ y0)
+wakeW = h0P @ x0.T
+wakeU = h0P @ y0.T
+h0 = sample(h0P)
+x1 = sample(sigmoid(self.b + self.W.T @ h0))
+y1 = sample(sigmoid(self.d + self.U.T @ h0))
+h1P = sigmoid(self.c + self.W @ x1 + self.U @ y1)
+dreamW = h1P @ x1.T
+dreamU = h1P @ y1.T
+# [...] perform gradient descent
+\end{python}
+
+\textbf{Prediction}
+\begin{python}
+x = data.T
+t = (self.c + self.U)[:, :, None] + (self.W @ x)[:, None, :]
+P = np.exp(self.d) * np.product(1 + np.exp(t), axis = 0)
+return np.argmax(P, axis = 0)
+\end{python}

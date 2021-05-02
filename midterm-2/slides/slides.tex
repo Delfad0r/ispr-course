@@ -65,13 +65,14 @@ pics/confusion matrix/.style 2 args={code={
 \foreach \y[evaluate=\y as \y using int(\y)] in {0,...,9} \node[inner xsep=4pt,anchor=east,left,scale=\myscale] at (0,{(\y+.5)*\sz}) {$\y$};
 \node[scale=\myscale,anchor=north,below] at (5*\sz,10*\sz) {Actual};
 \node[scale=\myscale,anchor=north,below,rotate=90] at (10*\sz,5*\sz) {Predicted};
+\shade[postaction=draw,bottom color=zerointensity,top color=red,middle color=yellow] (-2*\sz,0) rectangle (-2.5*\sz,10*\sz);
 \end{scope}
 }}}
 \makeatother
 
 \begin{document}
 \frame{\titlepage}
-
+\begin{comment}
 \begin{frame}[fragile]{RBM Classifier}
 \begin{columns}
 \begin{column}{.5\textwidth}
@@ -94,10 +95,10 @@ E(\mathbf{x},\mathbf{y},\mathbf{h})=&-\mathbf{h}^t\param{W}\mathbf{x}-\mathbf{h}
 \begin{column}{.5\textwidth}
 \centering
 \begin{tikzpicture}[z={(0.5,0.5)}]
-\pgfplotstableread[header=false]{pictures/input_digit.txt}{\inputtable}
+\pgfplotstableread[header=false]{pictures/input_digit_1.txt}{\inputtable}
 \pic (input-layer) at (-0.12*14,0,-0.12*14) {neuron grid={width=28,height=28,size=0.12cm,color/.style 2 args={/utils/exec={\tikzmath{\idx=int(#1+28*(27-#2));}\pgfplotstablegetelem{\idx}{0}\of\inputtable\tikzmath{\intensity=int(100*\pgfplotsretval);}},white!\intensity!black},grid lines/.style={gray,line width=0.2pt,opacity=.5},boundary/.style={gray,line width=0.5pt,line join=round}}};
 \pic (hidden-layer) at (-0.25*5,1.5,-0.25*5) {neuron grid={width=10,height=10,size=0.25cm,color/.style 2 args={/utils/exec={\pgfmathparse{random(100)}},orange!\pgfmathresult},grid lines/.style={black!70,line width=0.3pt,opacity=.7},boundary/.style={black,line width=.6pt,line join=round}}};
-\pic (output-layer) at (-0.3*5,3,-0.3*0.5) {neuron grid={width=10,height=1,size=0.3cm,color/.style 2 args={/utils/exec={\pgfmathparse{random(100)}},mythemecolor!\pgfmathresult},grid lines/.style={black!70,line width=0.3pt},boundary/.style={black,line width=.6pt,line join=round}}};
+\pic (output-layer) at (-0.3*5,3,-0.3*0.5) {neuron grid={width=10,height=1,size=0.3cm,color/.style 2 args={/utils/exec={\tikzmath{\intensity=int(max(0,min(100,(#1==3)*100+random(-40,40))));}},mythemecolor!\intensity},grid lines/.style={black!70,line width=0.3pt},boundary/.style={black,line width=.6pt,line join=round}}};
 \draw[violet,thick] (input-layer-010) -- (hidden-layer-000) (input-layer-110) -- (hidden-layer-100) (input-layer-111) -- (hidden-layer-101);
 \draw[violet,thick] (hidden-layer-010) -- (output-layer-000) (hidden-layer-110) -- (output-layer-100) (hidden-layer-111) -- (output-layer-101);
 \scoped[on background layer]\draw[violet,thick] (hidden-layer-011) -- (output-layer-001);
@@ -119,12 +120,13 @@ E(\mathbf{x},\mathbf{y},\mathbf{h})=&-\mathbf{h}^t\param{W}\mathbf{x}-\mathbf{h}
 \item Treat $\mathbf{x}$ and $\textcolor{mythemecolor}{\mathbf{y}}$ as visible units.
 \item Use one-hot encoding for $\textcolor{mythemecolor}{\mathbf{y}}$.
 \item Contrastive divergence, 1 step.
+\item SGD with momentum.
 \end{itemize}
 \end{column}
 \begin{column}{.35\textwidth}
 \resizebox{\linewidth}{!}{
 \begin{tikzpicture}[z={(0.5,0.5)}]
-\pgfplotstableread[header=false]{pictures/input_digit.txt}{\inputtable}
+\pgfplotstableread[header=false]{pictures/input_digit_1.txt}{\inputtable}
 \pic (input-layer) at (-0.12*14,0,-0.12*14) {neuron grid={width=28,height=28,size=0.12cm,color/.style 2 args={/utils/exec={\tikzmath{\idx=int(#1+28*(27-#2));}\pgfplotstablegetelem{\idx}{0}\of\inputtable\tikzmath{\intensity=int(100*\pgfplotsretval);}},white!\intensity!black},grid lines/.style={gray,line width=0.2pt,opacity=.5},boundary/.style={gray,line width=0.5pt,line join=round}}};
 \pic (hidden-layer) at (-0.25*5,1.5,-0.25*5) {neuron grid={width=10,height=10,size=0.25cm,color/.style 2 args={/utils/exec={\pgfmathparse{random(100)}},orange!\pgfmathresult},grid lines/.style={black!70,line width=0.3pt,opacity=.7},boundary/.style={black,line width=.6pt,line join=round}}};
 \pic (output-layer) at (-0.3*5,3,-0.3*0.5) {neuron grid={width=10,height=1,size=0.3cm,color/.style 2 args={/utils/exec={\tikzmath{\intensity=int((#1==3)*100);}},mythemecolor!\intensity},grid lines/.style={black!70,line width=0.3pt},boundary/.style={black,line width=.6pt,line join=round}}};
@@ -157,10 +159,10 @@ $$
 \begin{column}{.35\textwidth}
 \resizebox{\linewidth}{!}{
 \begin{tikzpicture}[z={(0.5,0.5)}]
-\pgfplotstableread[header=false]{pictures/input_digit.txt}{\inputtable}
+\pgfplotstableread[header=false]{pictures/input_digit_2.txt}{\inputtable}
 \pic (input-layer) at (-0.12*14,0,-0.12*14) {neuron grid={width=28,height=28,size=0.12cm,color/.style 2 args={/utils/exec={\tikzmath{\idx=int(#1+28*(27-#2));}\pgfplotstablegetelem{\idx}{0}\of\inputtable\tikzmath{\intensity=int(100*\pgfplotsretval);}},white!\intensity!black},grid lines/.style={gray,line width=0.2pt,opacity=.5},boundary/.style={gray,line width=0.5pt,line join=round}}};
 \pic (hidden-layer) at (-0.25*5,1.5,-0.25*5) {neuron grid={width=10,height=10,size=0.25cm,grid lines/.style={black!70,line width=0.3pt,opacity=.7},boundary/.style={black,line width=.6pt,line join=round}}};
-\pic (output-layer) at (-0.3*5,3,-0.3*0.5) {neuron grid={width=10,height=1,size=0.3cm,color/.style 2 args={/utils/exec={\tikzmath{\intensity=int(max(0,min(100,(#1==3)*100+random(-40,40))));}},blue!70!green!\intensity},grid lines/.style={black!70,line width=0.3pt},boundary/.style={black,line width=.6pt,line join=round}}};
+\pic (output-layer) at (-0.3*5,3,-0.3*0.5) {neuron grid={width=10,height=1,size=0.3cm,color/.style 2 args={/utils/exec={\tikzmath{\intensity=int(max(0,min(100,(#1==3)*100+random(-40,40))));}},mythemecolor!\intensity},grid lines/.style={black!70,line width=0.3pt},boundary/.style={black,line width=.6pt,line join=round}}};
 \draw[gray,thick] (input-layer-010) -- (hidden-layer-000) (input-layer-110) -- (hidden-layer-100) (input-layer-111) -- (hidden-layer-101);
 \draw[gray,thick] (hidden-layer-010) -- (output-layer-000) (hidden-layer-110) -- (output-layer-100) (hidden-layer-111) -- (output-layer-101);
 \scoped[on background layer]\draw[gray,thick] (hidden-layer-011) -- (output-layer-001);
@@ -173,45 +175,138 @@ $$
 \end{columns}
 \end{minipage}
 \end{frame}
-
+\end{comment}
 \begin{frame}[fragile]{Results}
 \begin{columns}[t]
-\begin{column}{.45\textwidth}
-\centering\textbf{Test}\\
-\vspace{.7em}
+\begin{column}{.5\textwidth}
+\textbf{\color{mythemecolor}RBM Classifier\vphantom{+}}
+\vspace{1em}\\
+\begin{minipage}[c]{.35\linewidth}
+\centering \textbf{Test}\\accuracy:\\\textcolor{orange!70!red}{\textbf{92.9\%}}
+\end{minipage}
+\begin{minipage}[c]{.6\linewidth}
+\begin{center}
+\tikz\pic{confusion matrix={pictures/confusion_test.txt}{.2cm}};
+\end{center}
+\end{minipage}
+\vspace{1.2em}\\
+\begin{minipage}[c]{.35\linewidth}
+\centering \textbf{Train}\\accuracy:\\\textcolor{orange!70!red}{\textbf{92.7\%}}
+\end{minipage}
+\begin{minipage}[c]{.6\linewidth}
+\begin{center}
+\tikz\pic{confusion matrix={pictures/confusion_train.txt}{.2cm}};
+\end{center}
+\end{minipage}
+\end{column}
+{\color{gray}\vrule{}}
+\begin{column}{.5\textwidth}
+\textbf{\color{mythemecolor}RBM + \pyth{sklearn.linear_model}}
+\vspace{1em}\\
+\begin{minipage}[c]{.35\linewidth}
+\centering \textbf{Test}\\accuracy:\\\textcolor{orange!70!red}{\textbf{90.4\%}}
+\end{minipage}
+\begin{minipage}[c]{.6\linewidth}
+\begin{center}
+\tikz\pic{confusion matrix={pictures/confusion_linear_test.txt}{.2cm}};
+\end{center}
+\end{minipage}
+\vspace{1.2em}\\
+\begin{minipage}[c]{.35\linewidth}
+\centering \textbf{Train}\\accuracy:\\\textcolor{orange!70!red}{\textbf{89.6\%}}
+\end{minipage}
+\begin{minipage}[c]{.6\linewidth}
+\begin{center}
+\tikz\pic{confusion matrix={pictures/confusion_linear_train.txt}{.2cm}};
+\end{center}
+\end{minipage}
+\end{column}
+\end{columns}
+\vspace{1em}
+\begin{center}
+\tikz\node[draw,rectangle,text width=.8\textwidth,align=center]{\textbf{\textcolor{mythemecolor}{\faYoutube} Neuron activations}};
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Experiments}
+\begin{itemize}
+\itemsep=2em
+\item\textbf{Gibbs sampling}\vspace{0.5em}
+\edef\imageh{0.7cm}
+\tikzset{gibbs sample/.pic={\path[path picture={\node at (path picture bounding box.center) {\includegraphics[height=\imageh]{#1}};}] (0,0) rectangle (\imageh,\imageh);}}
+\def\gibbssamplingrow#1{\tikz\pic{gibbs sample={pictures/gibbs_sampling/input_#1}}; & \tikz\foreach \i[evaluate=\i as \i using int(\i)] in {0,...,9} {\pic at ({\i*(\imageh+3pt)},0) {gibbs sample={pictures/gibbs_sampling/output_#1_\i}};};}
+\begin{tabularx}{0.95\linewidth}{>{\hsize=.09\hsize}XX}\toprule
+Input&Outputs (20 iterations)\\\midrule
+\gibbssamplingrow{0}\vspace{.2em}\\
+\gibbssamplingrow{1}\\
+\bottomrule
+\end{tabularx}
+\begin{comment}
+\textbf{Linear classifier on top of RBM}
+\begin{columns}
+\begin{column}{.4\textwidth}
+Yolo
+\end{column}
+\begin{column}{.6\textwidth}
 \begin{minipage}[c]{.6\linewidth}
 \begin{center}
 \tikz\pic{confusion matrix={pictures/confusion_test.txt}{.2cm}};
 \end{center}
 \end{minipage}
 \begin{minipage}[c]{.35\linewidth}
-\centering Accuracy:\\\textcolor{orange!70!red}{\textbf{93.1\%}}
+\centering Accuracy:\\\textcolor{orange!70!red}{\textbf{90.2\%}}
 \end{minipage}
-\vspace{1.2em}
-
-\textbf{Train}\\
-\vspace{.7em}
-\begin{minipage}[c]{.6\linewidth}
-\begin{center}
-\tikz\pic{confusion matrix={pictures/confusion_train.txt}{.2cm}};
-\end{center}
-\end{minipage}
-\begin{minipage}[c]{.35\linewidth}
-\centering Accuracy:\\\textcolor{orange!70!red}{\textbf{92.8\%}}
-\end{minipage}
-\end{column}
-{\color{gray}\vrule{}}
-\begin{column}{.55\textwidth}
-\centering\textbf{Neuron activations \textcolor{mythemecolor}{\faYoutube}}
-\begin{center}
-\includegraphics[width=\linewidth]{pictures/neuron_activations}
-\end{center}
 \end{column}
 \end{columns}
+\end{comment}
+
+\item\textbf{More hidden units}\vspace{1em}
+\begin{tikzpicture}
+\begin{axis}[
+legend entries={test,train},
+legend pos={south east},
+legend style={font=\scriptsize,cells={anchor=west}},
+height=4cm,width=.9\linewidth,
+grid=major,
+label style={font=\scriptsize},
+tick label style={font=\scriptsize},
+xlabel={Hidden units},
+xtick distance=100,
+ylabel={Accuracy},
+ytick distance=1,
+yticklabel={$\pgfmathprintnumber{\tick}\%$},
+every axis plot/.style={line width=1pt,mark=*,mark options={scale=.6}}
+]
+\addplot[mythemecolor] table[x={x},y={ytest}] {pictures/more_hidden_units_accuracy.txt}; 
+\addplot[orange] table[x={x},y={ytrain}] {pictures/more_hidden_units_accuracy.txt}; 
+\end{axis}
+\end{tikzpicture}
+\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Experiments}
-j
+\begin{frame}[fragile]{Appendix - Code}
+\textbf{One epoch of training}
+\begin{python}
+# [...] initialize x0 and y0
+h0P = sigmoid(self.c + self.W @ x0 + self.U @ y0)
+wakeW = h0P @ x0.T
+wakeU = h0P @ y0.T
+h0 = sample(h0P)
+x1 = sample(sigmoid(self.b + self.W.T @ h0))
+y1 = sample(sigmoid(self.d + self.U.T @ h0))
+h1P = sigmoid(self.c + self.W @ x1 + self.U @ y1)
+dreamW = h1P @ x1.T
+dreamU = h1P @ y1.T
+# [...] perform gradient descent
+\end{python}
+
+\textbf{Prediction}
+\begin{python}
+x = data.T
+t = (self.c + self.U)[:, :, None] + (self.W @ x)[:, None, :]
+P = np.exp(self.d) * np.product(1 + np.exp(t), axis = 0)
+return np.argmax(P, axis = 0)
+\end{python}
 \end{frame}
 
 \end{document}
