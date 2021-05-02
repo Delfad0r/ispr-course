@@ -18,6 +18,6 @@ dreamU = h1P @ y1.T
 \begin{python}
 x = data.T
 t = (self.c + self.U)[:, :, None] + (self.W @ x)[:, None, :]
-P = np.exp(self.d) * np.product(1 + np.exp(t), axis = 0)
+P = self.d + np.sum(np.log1p(np.exp(t)), axis = 0)
 return np.argmax(P, axis = 0)
 \end{python}

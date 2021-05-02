@@ -72,8 +72,7 @@ pics/confusion matrix/.style 2 args={code={
 
 \begin{document}
 \frame{\titlepage}
-\begin{comment}
-\begin{frame}[fragile]{RBM Classifier}
+\begin{frame}[fragile]{RBM Classifier\footnotemark}
 \begin{columns}
 \begin{column}{.5\textwidth}
 \textbf{Model}
@@ -109,6 +108,7 @@ E(\mathbf{x},\mathbf{y},\mathbf{h})=&-\mathbf{h}^t\param{W}\mathbf{x}-\mathbf{h}
 \end{tikzpicture}
 \end{column}
 \end{columns}
+\footnotetext[1]{Larochelle, Hugo and Bengio, Yoshua, ``Classification using Discriminative Restricted Boltzmann Machines''. In: \emph{Proceedings of the 25th International Conference on Machine Learning}. ICML '08.}
 \end{frame}
 
 \begin{frame}[fragile]{Training and Prediction}
@@ -117,7 +117,7 @@ E(\mathbf{x},\mathbf{y},\mathbf{h})=&-\mathbf{h}^t\param{W}\mathbf{x}-\mathbf{h}
 \begin{column}{.65\textwidth}
 \textbf{Training}
 \begin{itemize}
-\item Treat $\mathbf{x}$ and $\textcolor{mythemecolor}{\mathbf{y}}$ as visible units.
+\item Treat $\textcolor{mythemecolor}{\mathbf{y}}$ as visible units.
 \item Use one-hot encoding for $\textcolor{mythemecolor}{\mathbf{y}}$.
 \item Contrastive divergence, 1 step.
 \item SGD with momentum.
@@ -175,7 +175,7 @@ $$
 \end{columns}
 \end{minipage}
 \end{frame}
-\end{comment}
+
 \begin{frame}[fragile]{Results}
 \begin{columns}[t]
 \begin{column}{.5\textwidth}
@@ -222,9 +222,9 @@ $$
 \end{minipage}
 \end{column}
 \end{columns}
-\vspace{1em}
+\vspace{0.5em}
 \begin{center}
-\tikz\node[draw,rectangle,text width=.8\textwidth,align=center]{\textbf{\textcolor{mythemecolor}{\faYoutube} Neuron activations}};
+\tikz\node[draw=gray,fill=mythemecolor!10,line width=0.5pt,rectangle,rounded corners,inner sep=5pt,text width=.8\textwidth,align=center]{\textbf{\textcolor{mythemecolor}{\faYoutube}  Neuron activations}};
 \end{center}
 \end{frame}
 
@@ -304,7 +304,7 @@ dreamU = h1P @ y1.T
 \begin{python}
 x = data.T
 t = (self.c + self.U)[:, :, None] + (self.W @ x)[:, None, :]
-P = np.exp(self.d) * np.product(1 + np.exp(t), axis = 0)
+P = self.d + np.sum(np.log1p(np.exp(t)), axis = 0)
 return np.argmax(P, axis = 0)
 \end{python}
 \end{frame}
