@@ -1,0 +1,148 @@
+\documentclass[10pt]{beamer}
+\usepackage{mystyle}
+\usepackage{pythonhighlight}
+
+\midterm{3}
+\assignment{1}
+\date{7 June 2021}
+
+\title{Deep Denoising Autoencoder for MNIST}
+
+\makeatletter
+\newif\ifmodel@addreversed
+\pgfkeys{
+model settings/.is family,
+model settings/.cd,
+color/.store in=\model@color,
+sep/.store in=\model@sep,
+layers/.store in=\model@layers,
+add reversed/.is if=model@addreversed,
+defaults/.style={every layer/.style={},join/.style={gray},add reversed=false}}
+\tikzset{
+model/.pic={
+\pgfkeys{model settings/.cd,defaults,#1}
+\begin{scope}[
+	start chain=model going above,
+	node distance=\model@sep,
+	every node/.style={inner sep=0,outer sep=0,draw,/model settings/every layer},
+	w/.style={minimum width=##1},
+	h/.style={minimum height=##1},
+	c/.style={fill=this model color!##1!white},
+	label/.style={execute at begin node={##1}}]
+\colorlet{this model color}{\model@color}
+\foreach \options[count=\i] in \model@layers {
+	\tikzset{this layer style/.style/.expand once=\options}
+	\node[on chain=model,this layer style] {};
+	\expandafter\xdef\csname model@layer \i style\endcsname{\options}
+}
+\ifmodel@addreversed
+\tikzmath{\endfor=int(\tikzchaincount-1);}
+\foreach \i[evaluate=\i as \i using int(\endfor-\i+1)] in {1,...,\endfor} {
+	\tikzset{this layer style/.style/.expanded=\csname model@layer \i style\endcsname}
+	\node[on chain=model,this layer style]{};
+}
+\fi
+\foreach \i[evaluate=\i as \i using int(\i),evaluate=\i as \j using int(\i-1)] in {2,...,\tikzchaincount} {
+	\draw[/model settings/join] (model-\j.north east) -- (model-\i.south east) (model-\j.north west) -- (model-\i.south west);
+}
+\end{scope}
+\path[decorate,decoration={markings,mark=between positions 0.1 and 0.9 step 0.2 with {\draw[-{Triangle[scale=0.3]},line width=1pt] (0,0) -- (0,0.1);}}] (model-end.north west) -- (model-end.north east);
+\path[decorate,decoration={markings,mark=between positions 0.1 and 0.9 step 0.2 with {\draw[-{Triangle[scale=0.3]},line width=1pt] (0,-0.1) -- (0,0);}}] (model-begin.south west) -- (model-begin.south east);
+}}
+\makeatother
+
+\tikzset{base model/.style={sep=0.8pt,join/.style={line width=0.2pt},every layer/.style={line width=0.2pt,h=2pt}}}
+
+\colorlet{shallow color}{violet!80!pink}
+\colorlet{greedy color}{green!80!blue}
+\colorlet{no-pretrain color}{red!70!orange}
+\colorlet{fine-tuned color}{blue!80!green}
+
+\def\shallowpicture{\tikz\pic{model={/tikz/base model,sep=3pt,color=shallow color,add reversed=true,layers={{c=100,w=24pt},{c=25,w=12pt}}}};}
+\def\greedypicture{\tikz\pic{model={/tikz/base model,color=greedy color,add reversed=true,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};}
+\def\nopretrainpicture{\tikz\pic{model={/tikz/base model,color=no-pretrain color,add reversed=true,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};}
+\def\finetunedpicture{\tikz\pic{model={/tikz/base model,color=fine-tuned color,add reversed=true,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};}
+
+\def\shallowtext{\tabitem $1+1$ layers}
+\def\greedytext{\tabitem$8+8$ layers\\\tabitem greedy pretraining}
+\def\nopretraintext{\tabitem$8+8$ layers\\\tabitem random initialization\\\phantomtabitem with fine-tuning}
+\def\finetunedtext{\tabitem $8+8$ layers\\\tabitem greedy pretraining\\\phantomtabitem with fine-tuning}
+
+
+\tikzset{load digit/.pic={\path[path picture={\node at (path picture bounding box.center) {\includegraphics[height=\imageh]{pictures/#1}};}] (0,0) rectangle (\imageh,\imageh);}}
+
+
+\newcommand{\tabitem}{~~\llap{\textbullet}~}
+\newcommand{\phantomtabitem}{~~\llap{\phantom{\textbullet}}~}
+
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{comment}
+\begin{frame}{Denoising autoencoders}
+\begin{columns}
+\begin{column}{.35\textwidth}
+\begin{itemize}
+\item Models trained to reconstruct input without noise.
+\item Information bottleneck.
+\item ??
+\end{itemize}
+\end{column}
+\begin{column}{.65\textwidth}
+\begin{center}
+\setlength{\tabcolsep}{2ex}
+\def\imageh{1cm}
+\begin{tabulary}{\linewidth}{ C @{\hskip 2ex} L C }\toprule
+\multicolumn{2}{l}{Ground truth}&\makecell{\tikz\pic{load digit={ir-input.eps}};}\\
+\multicolumn{2}{l}{Noisy input}&\makecell{\tikz\pic{load digit={ir-noisy.eps}};}\\\midrule
+\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&\makecell{\tikz\pic{load digit={ir-shallow.eps}};}\\
+\makecell{\greedypicture}&\makecell[l]{\greedytext}&\makecell{\tikz\pic{load digit={ir-deep_greedy.eps}};}\\
+\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&\makecell{\tikz\pic{load digit={ir-deep_no_pretrain.eps}};}\\
+\makecell{\finetunedpicture}&\makecell[l]{\finetunedtext}&\makecell{\tikz\pic{load digit={ir-deep_finetuned.eps}};}\\\bottomrule
+\end{tabulary}
+\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Model evaluation}
+
+\vspace{2cm}
+\begin{center}
+\setlength{\tabcolsep}{2ex}
+\begin{tabulary}{0.95\textwidth}{ C @{\hskip 2ex} L R R R }\toprule
+\multicolumn{2}{l}{Model}&\tikzmarknode{mse}{MSE}&\makecell{\tikzmarknode{mse-noisy}{MSE}\\noisy}&\makecell{\tikzmarknode{classifier-accuracy}{Classifier}\\accuracy}\\\midrule
+\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&0.00&0.00&\SI{100}{\percent}\\
+\makecell{\greedypicture}&\makecell[l]{\greedytext}&0.00&0.00&\SI{100}{\percent}\\
+\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&0.00&0.00&\SI{100}{\percent}\\
+\makecell{\finetunedpicture}&\makecell[l]{\finetunedtext}&0.00&0.00&\SI{100}{\percent}\\\bottomrule
+\end{tabulary}
+\end{center}
+\begin{tikzpicture}[overlay,remember picture]
+\def\digit#1{\,\raisebox{-0.2\height}{\includegraphics[height=2.5ex]{pictures/#1.eps}}\,}
+\draw[shorten <=4pt,-{Stealth},black!40] ++(mse.north) to[out=90,in=-10] +(-0.5,1.2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-input}\right)\right\rVert^2$};
+\draw[shorten <=4pt,-{Stealth},black!40] ++(mse-noisy.north) to[out=90,in=-10] +(-1,2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-noisy}\right)\right\rVert^2$};
+\draw[shorten <=4pt,-{Stealth},black!40] ++(classifier-accuracy.north) to[out=90,in=-90] +(-0.3,0.7) pic[yshift=6pt,-,shorten <=0,black,opacity=0.8] {model={sep=1.5pt,every layer/.style={h=3pt,line width=0.3pt},join/.style={line width=0.3pt},color=fine-tuned color,layers={{c=100,w=36pt},{c=75,w=30pt},{c=50,w=24pt},{c=25,w=18pt},{inner sep=3pt,yshift=1pt,scale=0.7,label={SVM}}}}};
+\end{tikzpicture}
+\end{frame}
+\end{comment}
+
+\begin{frame}{Latent space visualization}
+%\tikzexternalenable
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[width=0.75\textwidth,height=0.75\textwidth,ticks=none,axis line style=black!70,legend style={draw=black!30,inner xsep=5pt,rounded corners=1pt,cells={scale=1.5},column sep=3pt,legend pos=outer north east}]
+\addplot[mark=*,mark options={draw opacity=0},scatter,only marks,scatter src=explicit symbolic,scatter/classes={0={blue!80!gray},1={yellow!50!orange},2={red!80!gray},3={violet},4={cyan!80!white},5={pink},6={green!80!white},7={brown},8={teal},9={gray}}] table[meta index=2] {pictures/tsne-data.txt};
+\legend{$0$,$1$,$2$,$3$,$4$,$5$,$6$,$7$,$8$,$9$}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+%\tikzexternaldisable
+
+\end{frame}
+
+\begin{frame}{Manifold learning and morphing}
+
+\end{frame}
+\end{document}

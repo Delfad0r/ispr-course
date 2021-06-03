@@ -1,0 +1,19 @@
+\frametitle{Model evaluation}
+
+\vspace{2cm}
+\begin{center}
+\setlength{\tabcolsep}{2ex}
+\begin{tabulary}{0.95\textwidth}{ C @{\hskip 2ex} L R R R }\toprule
+\multicolumn{2}{l}{Model}&\tikzmarknode{mse}{MSE}&\makecell{\tikzmarknode{mse-noisy}{MSE}\\noisy}&\makecell{\tikzmarknode{classifier-accuracy}{Classifier}\\accuracy}\\\midrule
+\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&0.00&0.00&\SI{100}{\percent}\\
+\makecell{\greedypicture}&\makecell[l]{\greedytext}&0.00&0.00&\SI{100}{\percent}\\
+\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&0.00&0.00&\SI{100}{\percent}\\
+\makecell{\finetunedpicture}&\makecell[l]{\finetunedtext}&0.00&0.00&\SI{100}{\percent}\\\bottomrule
+\end{tabulary}
+\end{center}
+\begin{tikzpicture}[overlay,remember picture]
+\def\digit#1{\,\raisebox{-0.2\height}{\includegraphics[height=2.5ex]{pictures/#1.eps}}\,}
+\draw[shorten <=4pt,-{Stealth},black!40] ++(mse.north) to[out=90,in=-10] +(-0.5,1.2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-input}\right)\right\rVert^2$};
+\draw[shorten <=4pt,-{Stealth},black!40] ++(mse-noisy.north) to[out=90,in=-10] +(-1,2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-noisy}\right)\right\rVert^2$};
+\draw[shorten <=4pt,-{Stealth},black!40] ++(classifier-accuracy.north) to[out=90,in=-90] +(-0.3,0.7) pic[yshift=6pt,-,shorten <=0,black,opacity=0.8] {model={sep=1.5pt,every layer/.style={h=3pt,line width=0.3pt},join/.style={line width=0.3pt},color=fine-tuned color,layers={{c=100,w=36pt},{c=75,w=30pt},{c=50,w=24pt},{c=25,w=18pt},{inner sep=3pt,yshift=1pt,scale=0.7,label={SVM}}}}};
+\end{tikzpicture}
