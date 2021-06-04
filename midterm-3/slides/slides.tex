@@ -51,7 +51,7 @@ model/.pic={
 }}
 \makeatother
 
-\tikzset{base model/.style={sep=0.8pt,join/.style={line width=0.2pt},every layer/.style={line width=0.2pt,h=2pt}}}
+\tikzset{base model/.style={sep=0.8pt,join/.append style={line width=0.2pt},every layer/.style={line width=0.2pt,h=2pt}}}
 
 \colorlet{shallow color}{violet!80!pink}
 \colorlet{greedy color}{green!80!blue}
@@ -126,23 +126,80 @@ model/.pic={
 \draw[shorten <=4pt,-{Stealth},black!40] ++(classifier-accuracy.north) to[out=90,in=-90] +(-0.3,0.7) pic[yshift=6pt,-,shorten <=0,black,opacity=0.8] {model={sep=1.5pt,every layer/.style={h=3pt,line width=0.3pt},join/.style={line width=0.3pt},color=fine-tuned color,layers={{c=100,w=36pt},{c=75,w=30pt},{c=50,w=24pt},{c=25,w=18pt},{inner sep=3pt,yshift=1pt,scale=0.7,label={SVM}}}}};
 \end{tikzpicture}
 \end{frame}
-\end{comment}
 
 \begin{frame}{Latent space visualization}
 %\tikzexternalenable
 \begin{center}
 \begin{tikzpicture}
-\begin{axis}[width=0.75\textwidth,height=0.75\textwidth,ticks=none,axis line style=black!70,legend style={draw=black!30,inner xsep=5pt,rounded corners=1pt,cells={scale=1.5},column sep=3pt,legend pos=outer north east}]
+\begin{axis}[
+name=axis,
+width=0.75\textwidth,height=0.75\textwidth,
+xticklabels={},yticklabels={},
+tickwidth=2pt,
+minor tick num=2,
+subtickwidth=1pt,
+axis line style=black,
+legend style={draw=black!30,inner xsep=5pt,rounded corners=1pt,,column sep=3pt,legend pos=outer north east},
+legend image post style={scale=1.5,yshift=0.5pt}]
 \addplot[mark=*,mark options={draw opacity=0},scatter,only marks,scatter src=explicit symbolic,scatter/classes={0={blue!80!gray},1={yellow!50!orange},2={red!80!gray},3={violet},4={cyan!80!white},5={pink},6={green!80!white},7={brown},8={teal},9={gray}}] table[meta index=2] {pictures/tsne-data.txt};
 \legend{$0$,$1$,$2$,$3$,$4$,$5$,$6$,$7$,$8$,$9$}
 \end{axis}
+\draw[gray!50,line width=0.5pt,decorate,decoration={brace,raise=4pt}] ([yshift=-2pt]axis.south west) -- ([yshift=2pt]axis.north west);
+\pic at(-2,0.5) {model={sep=3pt,color=fine-tuned color,every layer/.style={h=5pt},layers={{w=44pt,c=100},{w=40pt,c=90},{w=36pt,c=80},{w=32pt,c=70},{w=28pt,c=60},{w=24pt,c=50},{w=20pt,c=40},{w=16pt,c=30},{label={t-SNE},inner sep=3pt,scale=0.8}}}};
+\draw[gray!50,line width=0.5pt,shorten <= 5pt] (model-end.north) to[out=90,in=180] ([xshift=-6pt]axis.west);
 \end{tikzpicture}
 \end{center}
 %\tikzexternaldisable
 
 \end{frame}
+\end{comment}
 
-\begin{frame}{Manifold learning and morphing}
+\begin{frame}[fragile]{Experiments}
+
+\titletext{Manifold learning}
+\begin{center}
+\begin{tikzpicture}[-{Stealth}]
+\def\digit#1{\includegraphics[height=0.8cm]{pictures/ml-#1.eps}}
+\node[inner sep=0,outer sep=4pt,draw] (l) {\digit{in}};
+\ExplSyntaxOn
+\seq_set_from_clist:Nn \l_tmpa_seq {0,1,2,3,4}
+\seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq {\digit{out-#1}}
+\edef\matrixcontent{\seq_use:Nn \l_tmpb_seq {\&}}
+\seq_set_from_clist:Nn \l_tmpa_seq {5,6,7,8,9}
+\seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq {\digit{out-#1}}
+\edef\matrixcontent{\matrixcontent\\\seq_use:Nn \l_tmpb_seq {\&}}
+\ExplSyntaxOff
+\matrix[anchor=west,matrix of nodes,outer sep=0pt,every outer matrix/.style={inner sep=0.1pt},cells={inner sep=2.5pt},ampersand replacement=\&,left delimiter=\{,right delimiter=\}] (r) at (5,0) {\matrixcontent\\};
+\draw[orange] (l.east) -- node[midway,scale=0.7,inner sep=4pt,draw=orange,fill=yellow!30,text=red!50!black,rounded corners] (label) {$x\textcolor{gray}{{}\leftarrow{}} x+\lambda\cdot(\operatorname{AE}(x)-x)$} ([xshift=-12pt]r.west);
+\draw[violet] (label) to[out=45,in=135,loop,looseness=5] node[midway,scale=0.7,above] {$\times N$} (label);
+\end{tikzpicture}
+\end{center}
+
+
+\titletext{Digit morphing}
+
+\begin{center}
+\begin{tikzpicture}[every edge/.append style={preaction={draw=white,-,line cap=round,line width=4pt}}]
+\def\digit#1{\includegraphics[height=0.6cm]{pictures/#1.eps}}
+\scoped[on background layer]\draw[orange,fill=yellow!20] (-2,2) rectangle (6,-1);
+\node[orange,scale=.7,anchor=north west] at (-2,2) {Latent space $\mathbb{R}^{32}$};
+\coordinate[label={[scale=.7,red]above left:$h(x_0)$}] (hx0) at (0,0);
+\coordinate[label={[scale=.7,blue]above right:$h(x_1)$}] (hx1) at (4,1);
+\tikzmath{coordinate \q;\q=(hx1)-(hx0);}
+\shade[left color=red,right color=blue,rotate around={atan2(\qy,\qx):(hx1)}] ($(hx0)+(0,-0.2pt)$) rectangle ($(hx0)+({veclen(\qx,\qy)},0.2pt)$);
+\foreach \i in {0,1} {
+\pic at ([yshift=-22pt]hx\i) {model={/tikz/base model,color=fine-tuned color,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};
+\node[inner sep=2pt,fill=white,anchor=north] (d) at ([yshift=-8pt]model-begin.south) {\digit{ir-input}};
+\scoped[on background layer]\draw[gray] (d) edge (model-begin) (model-end) edge[-{Stealth}] ([yshift=-2pt]hx\i);
+}
+\def\t{0.4}
+\coordinate (hxt) at ($(hx0)!\t!(hx1)$);
+\pic at ([yshift=12pt]hxt) {model={/tikz/base model,color=fine-tuned color,layers={{c=25,w=12pt},{c=50,w=16pt},{c=75,w=20pt},{c=100,w=24pt}}}};
+\node[fill=white,anchor=south,inner sep=2pt] (d) at ([yshift=10pt]model-end.north) {\digit{ir-input}};
+\scoped[on background layer]\draw[gray] (hxt) edge (model-begin) (model-end) edge[-{Stealth}] (d);
+\foreach \i[evaluate=\i as \perc using int(\i*100)] in {0,\t,1} \draw[blue!\perc!red,fill=white,line width=0.6pt] ($(hx0)!\i!(hx1)$) circle (1pt);
+\end{tikzpicture}
+\end{center}
 
 \end{frame}
 \end{document}

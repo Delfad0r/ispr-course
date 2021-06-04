@@ -1,19 +1,47 @@
-\frametitle{Model evaluation}
+\frametitle{Experiments}
 
-\vspace{2cm}
+\titletext{Manifold learning}
 \begin{center}
-\setlength{\tabcolsep}{2ex}
-\begin{tabulary}{0.95\textwidth}{ C @{\hskip 2ex} L R R R }\toprule
-\multicolumn{2}{l}{Model}&\tikzmarknode{mse}{MSE}&\makecell{\tikzmarknode{mse-noisy}{MSE}\\noisy}&\makecell{\tikzmarknode{classifier-accuracy}{Classifier}\\accuracy}\\\midrule
-\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&0.00&0.00&\SI{100}{\percent}\\
-\makecell{\greedypicture}&\makecell[l]{\greedytext}&0.00&0.00&\SI{100}{\percent}\\
-\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&0.00&0.00&\SI{100}{\percent}\\
-\makecell{\finetunedpicture}&\makecell[l]{\finetunedtext}&0.00&0.00&\SI{100}{\percent}\\\bottomrule
-\end{tabulary}
-\end{center}
-\begin{tikzpicture}[overlay,remember picture]
-\def\digit#1{\,\raisebox{-0.2\height}{\includegraphics[height=2.5ex]{pictures/#1.eps}}\,}
-\draw[shorten <=4pt,-{Stealth},black!40] ++(mse.north) to[out=90,in=-10] +(-0.5,1.2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-input}\right)\right\rVert^2$};
-\draw[shorten <=4pt,-{Stealth},black!40] ++(mse-noisy.north) to[out=90,in=-10] +(-1,2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-noisy}\right)\right\rVert^2$};
-\draw[shorten <=4pt,-{Stealth},black!40] ++(classifier-accuracy.north) to[out=90,in=-90] +(-0.3,0.7) pic[yshift=6pt,-,shorten <=0,black,opacity=0.8] {model={sep=1.5pt,every layer/.style={h=3pt,line width=0.3pt},join/.style={line width=0.3pt},color=fine-tuned color,layers={{c=100,w=36pt},{c=75,w=30pt},{c=50,w=24pt},{c=25,w=18pt},{inner sep=3pt,yshift=1pt,scale=0.7,label={SVM}}}}};
+\begin{tikzpicture}[-{Stealth}]
+\def\digit#1{\includegraphics[height=0.8cm]{pictures/ml-#1.eps}}
+\node[inner sep=0,outer sep=4pt,draw] (l) {\digit{in}};
+\ExplSyntaxOn
+\seq_set_from_clist:Nn \l_tmpa_seq {0,1,2,3,4}
+\seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq {\digit{out-#1}}
+\edef\matrixcontent{\seq_use:Nn \l_tmpb_seq {\&}}
+\seq_set_from_clist:Nn \l_tmpa_seq {5,6,7,8,9}
+\seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq {\digit{out-#1}}
+\edef\matrixcontent{\matrixcontent\\\seq_use:Nn \l_tmpb_seq {\&}}
+\ExplSyntaxOff
+\matrix[anchor=west,matrix of nodes,outer sep=0pt,every outer matrix/.style={inner sep=0.1pt},cells={inner sep=2.5pt},ampersand replacement=\&,left delimiter=\{,right delimiter=\}] (r) at (5,0) {\matrixcontent\\};
+\draw[orange] (l.east) -- node[midway,scale=0.7,inner sep=4pt,draw=orange,fill=yellow!30,text=red!50!black,rounded corners] (label) {$x\textcolor{gray}{{}\leftarrow{}} x+\lambda\cdot(\operatorname{AE}(x)-x)$} ([xshift=-12pt]r.west);
+\draw[violet] (label) to[out=45,in=135,loop,looseness=5] node[midway,scale=0.7,above] {$\times N$} (label);
 \end{tikzpicture}
+\end{center}
+
+
+\titletext{Digit morphing}
+
+\begin{center}
+\begin{tikzpicture}[every edge/.append style={preaction={draw=white,-,line cap=round,line width=4pt}}]
+\def\digit#1{\includegraphics[height=0.6cm]{pictures/#1.eps}}
+\scoped[on background layer]\draw[orange,fill=yellow!20] (-2,2) rectangle (6,-1);
+\node[orange,scale=.7,anchor=north west] at (-2,2) {Latent space $\mathbb{R}^{32}$};
+\coordinate[label={[scale=.7,red]above left:$h(x_0)$}] (hx0) at (0,0);
+\coordinate[label={[scale=.7,blue]above right:$h(x_1)$}] (hx1) at (4,1);
+\tikzmath{coordinate \q;\q=(hx1)-(hx0);}
+\shade[left color=red,right color=blue,rotate around={atan2(\qy,\qx):(hx1)}] ($(hx0)+(0,-0.2pt)$) rectangle ($(hx0)+({veclen(\qx,\qy)},0.2pt)$);
+\foreach \i in {0,1} {
+\pic at ([yshift=-22pt]hx\i) {model={/tikz/base model,color=fine-tuned color,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};
+\node[inner sep=2pt,fill=white,anchor=north] (d) at ([yshift=-8pt]model-begin.south) {\digit{ir-input}};
+\scoped[on background layer]\draw[gray] (d) edge (model-begin) (model-end) edge[-{Stealth}] ([yshift=-2pt]hx\i);
+}
+\def\t{0.4}
+\coordinate (hxt) at ($(hx0)!\t!(hx1)$);
+\pic at ([yshift=12pt]hxt) {model={/tikz/base model,color=fine-tuned color,layers={{c=25,w=12pt},{c=50,w=16pt},{c=75,w=20pt},{c=100,w=24pt}}}};
+\node[fill=white,anchor=south,inner sep=2pt] (d) at ([yshift=10pt]model-end.north) {\digit{ir-input}};
+\scoped[on background layer]\draw[gray] (hxt) edge (model-begin) (model-end) edge[-{Stealth}] (d);
+\foreach \i[evaluate=\i as \perc using int(\i*100)] in {0,\t,1} \draw[blue!\perc!red,fill=white,line width=0.6pt] ($(hx0)!\i!(hx1)$) circle (1pt);
+\end{tikzpicture}
+\end{center}
+
