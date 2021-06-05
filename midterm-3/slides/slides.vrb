@@ -4,7 +4,7 @@
 \begin{center}
 \begin{tikzpicture}[-{Stealth}]
 \def\digit#1{\includegraphics[height=0.8cm]{pictures/ml-#1.eps}}
-\node[inner sep=0,outer sep=4pt,draw] (l) {\digit{in}};
+\node[inner sep=0,outer sep=4pt] (l) {\digit{in}};
 \ExplSyntaxOn
 \seq_set_from_clist:Nn \l_tmpa_seq {0,1,2,3,4}
 \seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq {\digit{out-#1}}
@@ -33,13 +33,13 @@
 \shade[left color=red,right color=blue,rotate around={atan2(\qy,\qx):(hx1)}] ($(hx0)+(0,-0.2pt)$) rectangle ($(hx0)+({veclen(\qx,\qy)},0.2pt)$);
 \foreach \i in {0,1} {
 \pic at ([yshift=-22pt]hx\i) {model={/tikz/base model,color=fine-tuned color,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};
-\node[inner sep=2pt,fill=white,anchor=north] (d) at ([yshift=-8pt]model-begin.south) {\digit{ir-input}};
+\node[inner sep=2pt,fill=white,anchor=north] (d) at ([yshift=-8pt]model-begin.south) {\digit{dm-x\i}};
 \scoped[on background layer]\draw[gray] (d) edge (model-begin) (model-end) edge[-{Stealth}] ([yshift=-2pt]hx\i);
 }
 \def\t{0.4}
 \coordinate (hxt) at ($(hx0)!\t!(hx1)$);
 \pic at ([yshift=12pt]hxt) {model={/tikz/base model,color=fine-tuned color,layers={{c=25,w=12pt},{c=50,w=16pt},{c=75,w=20pt},{c=100,w=24pt}}}};
-\node[fill=white,anchor=south,inner sep=2pt] (d) at ([yshift=10pt]model-end.north) {\digit{ir-input}};
+\node[fill=white,anchor=south,inner sep=2pt] (d) at ([yshift=10pt]model-end.north) {\digit{dm-xt}};
 \scoped[on background layer]\draw[gray] (hxt) edge (model-begin) (model-end) edge[-{Stealth}] (d);
 \foreach \i[evaluate=\i as \perc using int(\i*100)] in {0,\t,1} \draw[blue!\perc!red,fill=white,line width=0.6pt] ($(hx0)!\i!(hx1)$) circle (1pt);
 \end{tikzpicture}

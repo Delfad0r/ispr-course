@@ -72,21 +72,46 @@ model/.pic={
 \tikzset{load digit/.pic={\path[path picture={\node at (path picture bounding box.center) {\includegraphics[height=\imageh]{pictures/#1}};}] (0,0) rectangle (\imageh,\imageh);}}
 
 
-\newcommand{\tabitem}{~~\llap{\textbullet}~}
-\newcommand{\phantomtabitem}{~~\llap{\phantom{\textbullet}}~}
+\newcommand{\tabitem}{~~\llap{\raisebox{1.5pt}{\tikz\fill[black] circle(1.5pt);}}~}
+\newcommand{\phantomtabitem}{~~~}
 
 
 \begin{document}
 \frame{\titlepage}
 
-\begin{comment}
-\begin{frame}{Denoising autoencoders}
+\begin{frame}[fragile]{Models description}
 \begin{columns}
 \begin{column}{.35\textwidth}
 \begin{itemize}
-\item Models trained to reconstruct input without noise.
-\item Information bottleneck.
-\item ??
+\item Models trained to reconstruct input without noise
+\begin{center}
+\def\digit#1{\includegraphics[height=0.5cm]{pictures/ir-#1.eps}}
+\begin{tikzpicture}
+\pic[transform shape,scale=0.8,rotate=-90]{model={/tikz/base model,color=fine-tuned color,add reversed=true,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};
+\node[anchor=east,inner sep=1pt] (in) at ([xshift=-0.4cm]model-begin) {\digit{noisy}};
+\node[anchor=west,inner sep=1pt] (out) at ([xshift=0.4cm]model-end) {\digit{input}};
+\scoped[on background layer]\draw[gray] (in) edge (model-begin.south) (model-end.north) edge[-{Stealth}] (out);
+\end{tikzpicture}
+\end{center}
+\item Tied weights
+\begin{center}
+\begin{tikzpicture}
+\pic{model={/tikz/base model,sep=6pt,color=fine-tuned color,add reversed=true,layers={{c=100,w=24pt},{c=25,w=12pt}}}};
+\node[scale=0.5] at ($(model-1)!0.5!(model-2)$) {$w$};
+\node[scale=0.5] at ($(model-2)!0.5!(model-3)$) {$w\rlap{${}^t$}$};
+\end{tikzpicture}
+\end{center}
+\item Information bottleneck
+\begin{itemize}
+\item Easier visualization
+\item Best results with deep models
+\item Secret project
+\end{itemize}
+\begin{center}
+\begin{tikzpicture}
+\pic{model={/tikz/base model,sep=1.5pt,color=fine-tuned color,add reversed=true,layers={{c=100,w=24pt},{c=60,w=18pt},{c=20,w=24pt,scale=0.5,inner sep=2pt,label={$32$}}}}};
+\end{tikzpicture}
+\end{center}
 \end{itemize}
 \end{column}
 \begin{column}{.65\textwidth}
@@ -96,9 +121,11 @@ model/.pic={
 \begin{tabulary}{\linewidth}{ C @{\hskip 2ex} L C }\toprule
 \multicolumn{2}{l}{Ground truth}&\makecell{\tikz\pic{load digit={ir-input.eps}};}\\
 \multicolumn{2}{l}{Noisy input}&\makecell{\tikz\pic{load digit={ir-noisy.eps}};}\\\midrule
-\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&\makecell{\tikz\pic{load digit={ir-shallow.eps}};}\\
-\makecell{\greedypicture}&\makecell[l]{\greedytext}&\makecell{\tikz\pic{load digit={ir-deep_greedy.eps}};}\\
-\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&\makecell{\tikz\pic{load digit={ir-deep_no_pretrain.eps}};}\\
+\arrayrulecolor{gray!30}
+\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&\makecell{\tikz\pic{load digit={ir-shallow.eps}};}\\\cmidrule(l{0.2em}r{0.2em}){1-3}
+\makecell{\greedypicture}&\makecell[l]{\greedytext}&\makecell{\tikz\pic{load digit={ir-deep_greedy.eps}};}\\\cmidrule(l{0.2em}r{0.2em}){1-3}
+\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&\makecell{\tikz\pic{load digit={ir-deep_no_pretrain.eps}};}\\\cmidrule(l{0.2em}r{0.2em}){1-3}
+\arrayrulecolor{black}
 \makecell{\finetunedpicture}&\makecell[l]{\finetunedtext}&\makecell{\tikz\pic{load digit={ir-deep_finetuned.eps}};}\\\bottomrule
 \end{tabulary}
 \end{center}
@@ -106,29 +133,31 @@ model/.pic={
 \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Model evaluation}
+\begin{frame}[fragile]{Models evaluation}
 
 \vspace{2cm}
 \begin{center}
 \setlength{\tabcolsep}{2ex}
 \begin{tabulary}{0.95\textwidth}{ C @{\hskip 2ex} L R R R }\toprule
 \multicolumn{2}{l}{Model}&\tikzmarknode{mse}{MSE}&\makecell{\tikzmarknode{mse-noisy}{MSE}\\noisy}&\makecell{\tikzmarknode{classifier-accuracy}{Classifier}\\accuracy}\\\midrule
-\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&0.00&0.00&\SI{100}{\percent}\\
-\makecell{\greedypicture}&\makecell[l]{\greedytext}&0.00&0.00&\SI{100}{\percent}\\
-\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&0.00&0.00&\SI{100}{\percent}\\
-\makecell{\finetunedpicture}&\makecell[l]{\finetunedtext}&0.00&0.00&\SI{100}{\percent}\\\bottomrule
+\arrayrulecolor{gray!30}
+\makecell{\shallowpicture}&\makecell[l]{\shallowtext}&0.026&0.025&\SI{95.3}{\percent}\\\cmidrule(l{0.2em}r{0.2em}){1-5}
+\makecell{\greedypicture}&\makecell[l]{\greedytext}&0.056&0.048&\SI{97.2}{\percent}\\\cmidrule(l{0.2em}r{0.2em}){1-5}
+\makecell{\nopretrainpicture}&\makecell[l]{\nopretraintext}&0.013&0.013&\SI{97.4}{\percent}\\\cmidrule(l{0.2em}r{0.2em}){1-5}
+\arrayrulecolor{black}
+\makecell{\finetunedpicture}&\makecell[l]{\finetunedtext}&0.007&0.008&\SI{98.2}{\percent}\\\bottomrule
 \end{tabulary}
 \end{center}
 \begin{tikzpicture}[overlay,remember picture]
 \def\digit#1{\,\raisebox{-0.2\height}{\includegraphics[height=2.5ex]{pictures/#1.eps}}\,}
 \draw[shorten <=4pt,-{Stealth},black!40] ++(mse.north) to[out=90,in=-10] +(-0.5,1.2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-input}\right)\right\rVert^2$};
 \draw[shorten <=4pt,-{Stealth},black!40] ++(mse-noisy.north) to[out=90,in=-10] +(-1,2) node[black,opacity=0.8,anchor=east] {$\left\lVert\digit{ir-input} - \operatorname{AE}\left(\digit{ir-noisy}\right)\right\rVert^2$};
-\draw[shorten <=4pt,-{Stealth},black!40] ++(classifier-accuracy.north) to[out=90,in=-90] +(-0.3,0.7) pic[yshift=6pt,-,shorten <=0,black,opacity=0.8] {model={sep=1.5pt,every layer/.style={h=3pt,line width=0.3pt},join/.style={line width=0.3pt},color=fine-tuned color,layers={{c=100,w=36pt},{c=75,w=30pt},{c=50,w=24pt},{c=25,w=18pt},{inner sep=3pt,yshift=1pt,scale=0.7,label={SVM}}}}};
+\draw[shorten <=4pt,-{Stealth},black!40] ++(classifier-accuracy.north) to[out=90,in=-90] +(-0.3,0.7) pic[yshift=6pt,-,shorten <=0,black,opacity=0.8] {model={sep=1.5pt,every layer/.style={h=3pt,line width=0.3pt},join/.append style={line width=0.3pt},color=fine-tuned color,layers={{c=100,w=36pt},{c=75,w=30pt},{c=50,w=24pt},{c=25,w=18pt},{inner sep=3pt,yshift=1pt,scale=0.7,label={SVM}}}}};
 \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Latent space visualization}
-%\tikzexternalenable
+\tikzexternalenable
 \begin{center}
 \begin{tikzpicture}
 \begin{axis}[
@@ -139,9 +168,9 @@ tickwidth=2pt,
 minor tick num=2,
 subtickwidth=1pt,
 axis line style=black,
-legend style={draw=black!30,inner xsep=5pt,rounded corners=1pt,,column sep=3pt,legend pos=outer north east},
-legend image post style={scale=1.5,yshift=0.5pt}]
-\addplot[mark=*,mark options={draw opacity=0},scatter,only marks,scatter src=explicit symbolic,scatter/classes={0={blue!80!gray},1={yellow!50!orange},2={red!80!gray},3={violet},4={cyan!80!white},5={pink},6={green!80!white},7={brown},8={teal},9={gray}}] table[meta index=2] {pictures/tsne-data.txt};
+legend style={draw=black!30,inner xsep=5pt,rounded corners=1pt,column sep=3pt,legend pos=outer north east},
+legend image post style={scale=3,yshift=0.25pt}]
+\addplot[mark=*,mark options={draw opacity=0,scale=0.5},scatter,only marks,scatter src=explicit symbolic,scatter/classes={0={blue!80!gray},1={yellow!50!orange},2={red!80!gray},3={violet},4={cyan!80!white},5={pink},6={green!80!white},7={brown},8={teal},9={gray}}] table[meta index=2] {pictures/tsne-data.txt};
 \legend{$0$,$1$,$2$,$3$,$4$,$5$,$6$,$7$,$8$,$9$}
 \end{axis}
 \draw[gray!50,line width=0.5pt,decorate,decoration={brace,raise=4pt}] ([yshift=-2pt]axis.south west) -- ([yshift=2pt]axis.north west);
@@ -149,10 +178,9 @@ legend image post style={scale=1.5,yshift=0.5pt}]
 \draw[gray!50,line width=0.5pt,shorten <= 5pt] (model-end.north) to[out=90,in=180] ([xshift=-6pt]axis.west);
 \end{tikzpicture}
 \end{center}
-%\tikzexternaldisable
+\tikzexternaldisable
 
 \end{frame}
-\end{comment}
 
 \begin{frame}[fragile]{Experiments}
 
@@ -160,7 +188,7 @@ legend image post style={scale=1.5,yshift=0.5pt}]
 \begin{center}
 \begin{tikzpicture}[-{Stealth}]
 \def\digit#1{\includegraphics[height=0.8cm]{pictures/ml-#1.eps}}
-\node[inner sep=0,outer sep=4pt,draw] (l) {\digit{in}};
+\node[inner sep=0,outer sep=4pt] (l) {\digit{in}};
 \ExplSyntaxOn
 \seq_set_from_clist:Nn \l_tmpa_seq {0,1,2,3,4}
 \seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq {\digit{out-#1}}
@@ -189,13 +217,13 @@ legend image post style={scale=1.5,yshift=0.5pt}]
 \shade[left color=red,right color=blue,rotate around={atan2(\qy,\qx):(hx1)}] ($(hx0)+(0,-0.2pt)$) rectangle ($(hx0)+({veclen(\qx,\qy)},0.2pt)$);
 \foreach \i in {0,1} {
 \pic at ([yshift=-22pt]hx\i) {model={/tikz/base model,color=fine-tuned color,layers={{c=100,w=24pt},{c=75,w=20pt},{c=50,w=16pt},{c=25,w=12pt}}}};
-\node[inner sep=2pt,fill=white,anchor=north] (d) at ([yshift=-8pt]model-begin.south) {\digit{ir-input}};
+\node[inner sep=2pt,fill=white,anchor=north] (d) at ([yshift=-8pt]model-begin.south) {\digit{dm-x\i}};
 \scoped[on background layer]\draw[gray] (d) edge (model-begin) (model-end) edge[-{Stealth}] ([yshift=-2pt]hx\i);
 }
 \def\t{0.4}
 \coordinate (hxt) at ($(hx0)!\t!(hx1)$);
 \pic at ([yshift=12pt]hxt) {model={/tikz/base model,color=fine-tuned color,layers={{c=25,w=12pt},{c=50,w=16pt},{c=75,w=20pt},{c=100,w=24pt}}}};
-\node[fill=white,anchor=south,inner sep=2pt] (d) at ([yshift=10pt]model-end.north) {\digit{ir-input}};
+\node[fill=white,anchor=south,inner sep=2pt] (d) at ([yshift=10pt]model-end.north) {\digit{dm-xt}};
 \scoped[on background layer]\draw[gray] (hxt) edge (model-begin) (model-end) edge[-{Stealth}] (d);
 \foreach \i[evaluate=\i as \perc using int(\i*100)] in {0,\t,1} \draw[blue!\perc!red,fill=white,line width=0.6pt] ($(hx0)!\i!(hx1)$) circle (1pt);
 \end{tikzpicture}
