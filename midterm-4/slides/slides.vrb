@@ -1,0 +1,75 @@
+\frametitle{Loss function}\framesubtitle {The innovation of cycle-consistency}
+\textbf{Idea:} train two generators $\map{G}{\XX}{\YY}$ and $\map{F}{\YY}{\XX}$ simultaneously.
+
+\tikzset{
+pics/domain/.style 2 args={code={
+	\node[minimum width=1.33cm,minimum height=1.33cm,anchor=south west] (-bbox) {};
+	\draw[gray!50,decorate,decoration={zigzag,amplitude=.2mm}] (-bbox.north west) rectangle (-bbox.south east);
+	\node[anchor=#2,black!70] at (-bbox.#2) {#1};
+}},
+picture with domains/.style={
+x sample/.style={circle,draw=black,fill=blue!70!cyan,inner sep=.3mm},
+y sample/.style={x sample,fill=red},
+every edge/.style={draw,-{Latex},shorten <=.6mm,shorten >=.6mm},
+show distance/.style={draw=violet,|/.tip={Rays[n=2,width=1mm]},>={Classical TikZ Rightarrow[width=1mm]},|<->|,decorate,decoration={simple line,raise=-1.2mm}}
+}}
+\pgfdeclaredecoration{simple line}{initial}{
+  \state{initial}[width=\pgfdecoratedpathlength-1sp]{\pgfmoveto{\pgfpointorigin}}
+  \state{final}{\pgflineto{\pgfpointorigin}}
+}
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}X|X|X@{}}
+\textcolor{mythemecolor}{GAN architecture}&\textcolor{mythemecolor}{Cycle-consistency}&\textcolor{mythemecolor}{Identity regularization}\\
+\makecell[c]{
+\begin{tikzpicture}[
+node data/.style={draw=orange!30!gray,fill=orange!30,inner xsep=1mm,inner ysep=.5mm,text height={height("l")},text depth={depth("y")}},
+node model/.style={draw=cyan!20!gray,fill=cyan!20,rounded corners=1.5,inner sep=1mm,text height={height("l")},text depth={depth("y")}},
+every new ->/.style={gray,-{Latex[scale=.6]}}
+]
+\graph[grow right sep=2mm,math nodes,simple] {
+x [node data] -> G [node model] -!- {hy/\hat{y} [node data], y [node data]} -> /D_{\YY} [y=-.5,node model] -> {[nodes={violet,font=\tiny,inner xsep=0mm}] /\text{fake?} [y=-.1],/\text{real?} [y=.1]};
+G -> hy;
+};
+\end{tikzpicture}
+}&
+\makecell[c]{
+\begin{tikzpicture}[picture with domains]
+\pic {domain={$\XX$}{north west}};
+\node[x sample] (x) at (.6,.8) {};
+\node[x sample] (z) at (.8,.4) {};
+\begin{scope}[shift={(1.7,0)}]arrows.meta
+\pic {domain={$\YY$}{north east}};
+\node[y sample] (y) at (.6,.6) {};
+\end{scope}
+\path (x) edge[bend left] node[above] {$G$} (y) (y) edge[bend left] node[below] {$F$} (z);
+\path[show distance] (x.center) -- (z.center);
+\end{tikzpicture}
+}&
+\makecell[c]{
+\begin{tikzpicture}[picture with domains]
+\pic {domain={$\YY$}{north east}};
+\begin{pgfinterruptboundingbox}
+\path[every edge] (.4,1.) node[y sample] (y1) {} to[bend right=120,min distance=1.25cm,"$G$"'] (.6,.6) node[y sample] (y2) {};
+\end{pgfinterruptboundingbox}
+\path[show distance] (y2.center) -- (y1.center);
+\end{tikzpicture}
+}
+\\
+\faChartLine{} $G(x)\approx y$&\faChartLine{} $F\circ G=\operatorname{id}_{\XX}$&\faChartLine{} $G(y)=y$
+\end{tabularx}
+\end{center}
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\belowdisplayskip}{0pt}
+\begin{align*}
+\textcolor{violet}{\LL}={}&\tikzmarknode{l1}{\EE_{x\sim p(x)}[\log(1-D_{\YY}(G(x)))]+\EE_{y\sim p(y)}[\log D_{\YY}(y)]}&\quad&\tikzmarknode[violet]{r1}{\LL_{\text{adv}}(G,D_{\YY})}\\
+{}+{}&\tikzmarknode{l2}{\EE_{y\sim p(y)}[\log(1-D_{\XX}(F(y)))]+\EE_{x\sim p(x)}[\log D_{\XX}(x)]}&&\tikzmarknode[violet]{r2}{\LL_{\text{adv}}(F,D_{\XX})}\\
+{}+{}&\tikzmarknode{l3}{\lambda\cdot\EE_{x\sim p(x)}[\norm{F(G(x))-x}_1]}&&\tikzmarknode[violet]{r3}{\LL_{\text{cyc}}(F\circ G)}\\
+{}+{}&\tikzmarknode{l4}{\lambda\cdot\EE_{y\sim p(y)}[\norm{G(F(y))-y}_1]}&&\tikzmarknode[violet]{r4}{\LL_{\text{cyc}}(G\circ F)}\\
+{}+{}&\tikzmarknode{l5}{\alpha\cdot\EE_{y\sim p(y)}[\norm{G(y)-y}_1]}&&\tikzmarknode[violet]{r5}{\LL_{\text{id}}(G)}\\
+{}+{}&\tikzmarknode{l6}{\alpha\cdot\EE_{x\sim p(x)}[\norm{F(x)-x}_1]}&&\tikzmarknode[violet]{r6}{\LL_{\text{id}}(F)}
+\begin{tikzpicture}[overlay,remember picture]
+\foreach \i[evaluate=\i as \i using int(\i)] in {1,...,6} {
+\draw[shorten <=1mm,shorten >=1mm,violet!40,dashed] (r\i) -- (l\i);
+}
+\end{tikzpicture}
+\end{align*}
